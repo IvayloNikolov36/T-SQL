@@ -1,0 +1,17 @@
+
+SELECT 
+CASE
+	WHEN YEAR(c.BirthDate) BETWEEN 1970 AND 1979 THEN CONCAT('70', CHAR(39), 's')
+	WHEN YEAR(c.BirthDate) BETWEEN 1980 AND 1989 THEN CONCAT('80', CHAR(39), 's')
+	WHEN YEAR(c.BirthDate) BETWEEN 1990 AND 1999 THEN CONCAT('90', CHAR(39), 's')
+	WHEN YEAR(c.BirthDate) < 1970 OR YEAR(c.BirthDate) > 1999 THEN 'Others'
+END AS [AgeGroup], SUM(o.Bill) AS [Revenue], AVG(o.TotalMileage) AS [AverageMileage]
+FROM Orders AS o
+JOIN Clients AS c ON c.Id = o.ClientId
+GROUP BY CASE
+			WHEN YEAR(c.BirthDate) BETWEEN 1970 AND 1979 THEN CONCAT('70', CHAR(39), 's')
+			WHEN YEAR(c.BirthDate) BETWEEN 1980 AND 1989 THEN CONCAT('80', CHAR(39), 's')
+			WHEN YEAR(c.BirthDate) BETWEEN 1990 AND 1999 THEN CONCAT('90', CHAR(39), 's')
+			WHEN YEAR(c.BirthDate) < 1970 OR YEAR(c.BirthDate) > 1999 THEN 'Others'
+		 END
+ORDER BY [AgeGroup]

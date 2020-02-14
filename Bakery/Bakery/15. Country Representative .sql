@@ -1,21 +1,12 @@
-SELECT 
-	c.[Name] AS CountryName, 
-	d.[Name] AS DistributorName
-FROM Countries AS c
-JOIN Distributors AS d ON c.Id = d.CountryId
-JOIN Ingredients AS i ON i.DistributorId = d.Id
-GROUP BY c.[Name], d.[Name]
-ORDER BY COUNT(d.Id) DESC
-
---ALL DISTRIBUTORS WITH COUNT OF INGREDIENTS
-FROM(
-	SELECT 
-		d.Id AS DistributorName, 
-		COUNT(i.Id) AS CountIngredients
-	FROM Ingredients AS i
-	JOIN Distributors AS d ON d.Id = i.DistributorId
-	JOIN Countries AS c ON c.Id = d.CountryId
-	GROUP BY d.Id
-) AS  DistrIngrCount
-
+SELECT x.CountryName, x.DistributorName
+FROM (SELECT c.[Name] AS [CountryName], 
+       d.[Name] AS [DistributorName], 
+	   COUNT(i.Id) AS [IngredientsCount],
+	   DENSE_RANK() OVER(PARTITION BY c.[Name] ORDER BY COUNT(i.Id) DESC) AS Rank
+	   FROM Distributors AS d
+       LEFT JOIN Ingredients AS i ON d.Id = i.DistributorId
+       JOIN Countries AS c ON d.CountryId = c.Id
+       GROUP BY c.[Name], d.[Name]) AS x
+	   WHERE Rank = 1
+ORDER BY CountryName, DistributorName
 

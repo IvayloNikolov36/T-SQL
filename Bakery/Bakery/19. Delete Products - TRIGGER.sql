@@ -1,15 +1,13 @@
-CREATE OR ALTER TRIGGER tr_DeleteProduct ON Products
-INSTEAD OF DELETE
-AS
+CREATE OR ALTER TRIGGER tr_DeleteProducts ON Products INSTEAD OF DELETE AS
 BEGIN
-	DELETE FROM Feedbacks
-	WHERE ProductId IN (SELECT Id FROM deleted)
+	DECLARE @productId INT = (SELECT Id FROM deleted);
 
-	DELETE FROM ProductsIngredients
-	WHERE ProductId IN (SELECT Id FROM deleted)
-	
-	DELETE FROM Products
-	WHERE Id IN (SELECT Id FROM deleted)
-END;
+	DELETE FROM ProductsIngredients 
+	WHERE ProductId = @productId;
 
-DELETE FROM Products WHERE Id = 8;
+	DELETE FROM FeedBacks 
+	WHERE ProductId = @productId;
+
+	DELETE FROM PRoducts 
+	WHERE Id = @productId;
+END

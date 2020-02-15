@@ -1,41 +1,19 @@
---Select all products which ingredients are delivered by only one distributor. Order them by product Id
-
-SELECT
-	p.[Name] AS ProductName,
-	AVG(f.Rate) AS AverageRate, 
-	d.[Name] AS DistributorName, 
-	cn.[Name] AS DistributorCountry
+SELECT p.[Name] AS [ProductName], 
+	   AVG(f.Rate) AS [ProductAverageRate], 
+	   d.[Name] AS [DistributorName], 
+	   c.[Name] AS [DistributorCountry]
 FROM Products AS p
-JOIN Feedbacks AS f 
-	ON f.ProductId = p.Id
-JOIN ProductsIngredients AS pin 
-	ON pin.ProductId = p.Id
-JOIN Ingredients AS i 
-	ON i.Id = pin.IngredientId
-JOIN Distributors AS d 
-	ON d.Id = i.DistributorId
-JOIN Countries AS cn 
-	ON cn.Id = d.CountryId
-WHERE p.Id NOT IN (SELECT ProductId	
-					 FROM (SELECT
-							   p.Id AS ProductId,
-							   p.Name AS ProductName,
-							   AVG(f.Rate) AS AverageRate, 
-							   d.Name AS DistributorName, 
-							   cn.Name AS DistributorCountry,
-							   DENSE_RANK() OVER (PARTITION BY p.[Name] ORDER BY d.[Name]) AS [Rank]
-						   FROM Products AS p
-						   JOIN Feedbacks AS f 
-							   ON f.ProductId = p.Id
-						   JOIN ProductsIngredients AS pin 
-						       ON pin.ProductId = p.Id
-						   JOIN Ingredients AS i 
-						       ON i.Id = pin.IngredientId
-						   JOIN Distributors AS d 
-						       ON d.Id = i.DistributorId
-						   JOIN Countries AS cn 
-						       ON cn.Id = d.CountryId
-						   GROUP BY p.Id, p.[Name], d.[Name], cn.[Name]) AS RankedProducts
-					       WHERE [Rank] > 1)
-GROUP BY p.Id, p.[Name], d.[Name], cn.[Name]
+JOIN ProductsIngredients AS pri ON p.Id = pri.ProductId
+JOIN Ingredients AS i ON pri.IngredientId = i.Id
+JOIN Distributors AS d ON i.DistributorId = d.Id
+JOIN Countries AS c ON d.CountryId = c.Id
+LEFT JOIN Feedbacks AS f ON p.Id = f.ProductId
+WHERE p.Id IN (SELECT p.Id
+			   FROM Products AS p
+			   JOIN ProductsIngredients AS pri ON p.Id = pri.ProductId
+			   JOIN Ingredients AS i ON pri.IngredientId = i.Id
+			   JOIN Distributors AS d ON i.DistributorId = d.Id
+			   GROUP BY p.Id
+			   HAVING COUNT(DISTINCT d.Id) = 1)
+GROUP BY p.Id, p.[Name], d.[Name], c.[Name]
 ORDER BY p.Id
